@@ -52,6 +52,12 @@ class ProductionConfig(BaseConfig):
                 "SECRET_KEY is unset or left at its development default; "
                 "production refuses to start with a predictable secret."
             )
+        if "DATABASE_URL" not in os.environ:
+            raise RuntimeError(
+                "DATABASE_URL is unset; production refuses to fall back to "
+                "a local SQLite file that would silently swallow data. Set "
+                "DATABASE_URL to the PostgreSQL connection string."
+            )
 
 
 _CONFIGS: dict[str, type[BaseConfig]] = {
