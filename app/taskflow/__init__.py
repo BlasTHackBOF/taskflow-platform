@@ -25,6 +25,9 @@ def create_app(config: BaseConfig | None = None) -> Flask:
     db.init_app(app)
     migrate.init_app(app, db)
 
+    # Imported for the side effect of registering tables on db.metadata,
+    # which Flask-Migrate reads when autogenerating migrations.
+    from taskflow import models  # noqa: F401
     from taskflow.api.health import health_bp
 
     app.register_blueprint(health_bp)
