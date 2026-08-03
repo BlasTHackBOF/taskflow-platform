@@ -32,6 +32,11 @@ def create_app(config: BaseConfig | None = None) -> Flask:
     from taskflow.api.errors import register_error_handlers
     from taskflow.api.health import health_bp
     from taskflow.api.tasks import tasks_bp
+    from taskflow.logs import init_logging
+    from taskflow.metrics import init_metrics
+
+    init_logging(app)
+    init_metrics(app)
 
     app.register_blueprint(health_bp)
     app.register_blueprint(boards_bp, url_prefix="/api/v1")

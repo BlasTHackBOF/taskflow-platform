@@ -23,6 +23,8 @@ class BaseConfig:
 
     def __init__(self) -> None:
         self.SECRET_KEY: str = os.environ.get("SECRET_KEY", _DEFAULT_SECRET_KEY)
+        # "json" for production and containers; "console" for local reading.
+        self.LOG_FORMAT: str = os.environ.get("LOG_FORMAT", "json")
         # Relative SQLite paths are resolved by Flask-SQLAlchemy into the
         # app instance folder, keeping the working tree free of DB files.
         self.SQLALCHEMY_DATABASE_URI: str = os.environ.get(
