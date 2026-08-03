@@ -28,8 +28,14 @@ def create_app(config: BaseConfig | None = None) -> Flask:
     # Imported for the side effect of registering tables on db.metadata,
     # which Flask-Migrate reads when autogenerating migrations.
     from taskflow import models  # noqa: F401
+    from taskflow.api.boards import boards_bp
+    from taskflow.api.errors import register_error_handlers
     from taskflow.api.health import health_bp
+    from taskflow.api.tasks import tasks_bp
 
     app.register_blueprint(health_bp)
+    app.register_blueprint(boards_bp, url_prefix="/api/v1")
+    app.register_blueprint(tasks_bp, url_prefix="/api/v1")
+    register_error_handlers(app)
 
     return app
