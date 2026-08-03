@@ -1,0 +1,19 @@
+# Tooling configuration for the TaskFlow application.
+# Tests run against in-memory SQLite (see tests/conftest.py) so the suite
+# needs no container; coverage below 80% fails the run outright, and the
+# JUnit XML lands in reports/ for Jenkins to consume.
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "--cov=taskflow --cov-branch --cov-report=term-missing --cov-report=xml --junit-xml=reports/junit.xml"
+
+[tool.coverage.report]
+fail_under = 80
+show_missing = true
+
+[tool.ruff]
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

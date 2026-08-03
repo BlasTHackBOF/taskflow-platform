@@ -23,15 +23,11 @@ kubeconfig
 .idea/
 .vscode/
 
-# Agent / editor local state
-.claude/
+# Agent / editor local state — shared settings.json is committed on purpose
+.claude/settings.local.json
 
-# SOPS-encrypted files are committed deliberately (see ADR-0002)
-age.key
-*.agekey
+# Secret files — only their .example twins are committed (see ADR-0002)
 secrets.yaml
-!*.enc.yaml
-!*.enc.tfvars
 
 # Ansible
 *.retry
@@ -44,3 +40,4 @@ charts/*.tgz
 # Python
 htmlcov/
 *.egg-info/
+reports/
