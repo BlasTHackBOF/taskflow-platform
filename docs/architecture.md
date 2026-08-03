@@ -139,8 +139,10 @@ platform beneath it.
 - EC2 instances receive AWS permissions through an IAM instance profile scoped
   to the project's own S3 buckets. No static access keys are placed on any
   server.
-- Secrets are encrypted with SOPS and committed as ciphertext. See
-  [ADR-0002](decisions/0002-encrypt-secrets-with-sops.md).
+- Real secrets never enter the repository; every secret file has a committed
+  `.example` twin, and Ansible-layer secrets are encrypted at rest with
+  Ansible Vault. See
+  [ADR-0002](decisions/0002-manage-secrets-with-ansible-vault.md).
 
 ## Decisions
 
@@ -150,5 +152,6 @@ Decisions with lasting consequences are recorded individually in
 | ADR | Decision |
 | --- | --- |
 | [0001](decisions/0001-use-ubuntu-2404-lts.md) | Ubuntu 24.04 LTS on all servers |
-| [0002](decisions/0002-encrypt-secrets-with-sops.md) | SOPS + age, ciphertext committed |
+| [0002](decisions/0002-manage-secrets-with-ansible-vault.md) | Ansible Vault; only `.example` twins committed |
 | [0003](decisions/0003-resource-naming-convention.md) | Single naming convention across layers |
+| [0004](decisions/0004-use-ghcr-as-container-registry.md) | GHCR as the container registry |
