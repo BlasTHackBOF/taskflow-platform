@@ -1,0 +1,35 @@
+# Keep the build context to what the image actually needs: app code,
+# requirements and migrations. Everything else stays out.
+
+.git
+.venv
+**/__pycache__
+**/*.py[cod]
+
+# Tests and their artifacts never ship in the image
+app/tests
+app/reports
+app/pyproject.toml
+app/requirements-dev.txt
+.pytest_cache
+.ruff_cache
+.coverage
+coverage.xml
+htmlcov
+
+# Local state and secrets
+.env
+*.db
+app/instance
+
+# Not application code
+docs
+infra
+kubernetes
+monitoring
+ci-cd
+scripts
+docker
+CLAUDE.md
+README.md
+.claude
