@@ -1,0 +1,82 @@
+# TaskFlow local stack — the whole thing comes up with:
+#
+#   docker compose up --build
+#
+# Credentials come from .env (copy .env.example and fill it in); compose
+# reads it automatically from this directory. Nothing sensitive lives in
+# this file. `${VAR:?...}` makes a missing .env fail loudly at once
+# instead of booting containers with empty credentials.
+
+services:
+  db:
+    image: postgres:16.14-alpine  # pinned patch version, never latest
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:?set in .env}
+      POSTGRES_USER: ${POSTGRES_USER:?set in .env}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set in .env}
+    volumes:
+      # Named volume: data survives `down` and restarts; `down -v`
+      # removes it for a deliberate reset.
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # $$ defers resolution to the container's own environment at run
+      # time, instead of compose interpolation time.
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    restart: unless-stopped
+
+  # One-shot migration runner, gating the app via
+  # `service_completed_successfully`. Chosen over an entrypoint step so
+  # that scaling the app to N replicas never triggers N concurrent
+  # migrations, and the serving container's startup stays decoupled from
+  # migration duration — the same shape as the Kubernetes Job that
+  # replaces this later. The cost: one more service here, and migrations
+  # run on `up`, not on a bare `restart` of the app — which is correct,
+  # since a restart changes no schema.
+  migrate:
+    build: &app-build
+      context: .
+      dockerfile: docker/Dockerfile
+    image: taskflow-app:compose
+    command: ["flask", "db", "upgrade"]
+    environment:
+      FLASK_APP: wsgi.py
+      SECRET_KEY: ${SECRET_KEY:?set in .env}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: "no"
+
+  app:
+    build: *app-build
+    image: taskflow-app:compose
+    ports:
+      - "${APP_PORT:-8000}:8000"
+    environment:
+      # FLASK_ENV is deliberately not passed: unset resolves to the
+      # production config, which is what every deployed environment runs.
+      SECRET_KEY: ${SECRET_KEY:?set in .env}
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
+      GUNICORN_WORKERS: ${GUNICORN_WORKERS:-2}
+      LOG_FORMAT: ${LOG_FORMAT:-json}
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      # Mirrors the image's own HEALTHCHECK so every health gate in the
+      # stack is visible in this one file.
+      test: ["CMD", "python", "-c", "import sys, urllib.request; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/healthz', timeout=2).status == 200 else 1)"]
+      interval: 15s
+      timeout: 3s
+      retries: 3
+      start_period: 10s
+    restart: unless-stopped
+
+volumes:
+  pgdata:
