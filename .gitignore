@@ -40,3 +40,4 @@ charts/*.tgz
 # Python
 htmlcov/
 *.egg-info/
+reports/
