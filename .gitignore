@@ -16,6 +16,12 @@ kubeconfig
 *.tfstate.*
 *.tfvars
 !*.tfvars.example
+# The bootstrap state is deliberately committed: it describes only the
+# state bucket itself and contains no secrets (ADR-0006)
+!infra/terraform/bootstrap/terraform.tfstate
+# Backend config is environment-specific; only the example twin is committed
+backend.hcl
+!backend.hcl.example
 
 *.db
 

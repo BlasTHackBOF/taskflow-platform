@@ -156,3 +156,4 @@ Decisions with lasting consequences are recorded individually in
 | [0003](decisions/0003-resource-naming-convention.md) | Single naming convention across layers |
 | [0004](decisions/0004-use-ghcr-as-container-registry.md) | GHCR as the container registry |
 | [0005](decisions/0005-python-slim-multi-stage-image.md) | python:slim base, multi-stage build |
+| [0006](decisions/0006-s3-state-backend-with-native-locking.md) | Terraform state in S3 with native lockfile locking, no DynamoDB |
