@@ -9,22 +9,24 @@ On-demand rates, us-east-1, at the time of writing. A month is 730 hours.
 
 | Line item | Rate | 24/7 month | Free Tier coverage |
 | --- | --- | --- | --- |
-| CI node (t3.small) | $0.0208/h | $15.18 | None — 1 GiB does not run Jenkins; this is the project's one deliberately paid resource |
-| App node (t3.micro) | $0.0104/h | $7.59 | 750 h/month for 12 months on eligible accounts → $0 |
+| CI node (t3.small) | $0.0208/h | $15.18 | None — 1 GiB does not run Jenkins |
+| App node (t3.small) | $0.0208/h | $15.18 | None — grown from the Free Tier t3.micro, whose 911 MiB could not hold k3s (ADR-0008) |
 | Public IPv4 × 2 | $0.005/h each | $3.65 each, $7.30 both | 750 IPv4-hours/month — covers roughly one address running 24/7 |
 | EBS gp3, 30 GB total | $0.08/GB-month | $2.40 | 30 GB allowance → $0 |
 | S3 (tfstate + artifacts) | $0.023/GB-month | cents | 5 GB allowance |
 
 Worst case, 24/7 with no Free Tier at all:
-$15.18 + $7.59 + $7.30 + $2.40 = **$32.47/month**, plus S3 cents. On an
-account with the legacy Free Tier: $15.18 + $3.65 = **$18.83/month**
-(the t3.small plus the second public IPv4 address).
+$15.18 + $15.18 + $7.30 + $2.40 = **$40.06/month**, plus S3 cents. On
+an account with the legacy Free Tier: $15.18 + $15.18 + $3.65 =
+**$34.01/month** — the instance allowance only ever covered t3.micro,
+so since the app node grew (ADR-0008) both nodes bill in full and only
+one public IPv4 and the EBS remain covered.
 
 ## The line most people forget
 
 Since February 2024 AWS charges $0.005/hour for **every** public IPv4
 address, including auto-assigned ones. Per running hour this stack costs
-$0.0412, and $0.010 of that — about a quarter — is the two public IPs.
+$0.0516, and $0.010 of that — about a fifth — is the two public IPs.
 Two things follow:
 
 - **Stopping the instances stops the IPv4 charge too**, because both

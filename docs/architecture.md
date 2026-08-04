@@ -17,7 +17,7 @@ engineering in this repository lives.
   ┌──────────┐       │  ┌────────────────┐    ┌──────────────────┐  │
   │  GitHub  │──────►│  │  CI node       │───►│  Application     │  │
   │  (repo)  │webhook│  │  t3.small      │    │  node            │  │
-  └──────────┘       │  │                │    │  t3.medium       │  │
+  └──────────┘       │  │                │    │  t3.small        │  │
        ▲             │  │  Jenkins       │    │                  │  │
        │             │  │  build, test,  │    │  k3s             │  │
        │             │  │  scan, push    │    │  TaskFlow pods   │  │
