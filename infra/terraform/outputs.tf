@@ -10,6 +10,21 @@ output "k3s_public_ip" {
   description = "Application node (taskflow-prod-k3s-01) — Ansible inventory entry."
 }
 
+output "jenkins_instance_id" {
+  value       = module.compute.jenkins_instance_id
+  description = "CI node instance ID — consumed by scripts/env-control.sh."
+}
+
+output "k3s_instance_id" {
+  value       = module.compute.k3s_instance_id
+  description = "Application node instance ID — consumed by scripts/env-control.sh."
+}
+
+output "aws_region" {
+  value       = var.aws_region
+  description = "Region every resource lives in — consumed by scripts/env-control.sh."
+}
+
 output "artifacts_bucket" {
   value       = module.storage.artifacts_bucket_name
   description = "Jenkins build artifact bucket."
