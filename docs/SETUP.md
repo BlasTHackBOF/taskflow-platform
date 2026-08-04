@@ -87,6 +87,20 @@ docker compose down -v      # -v also removes the database volume
 | Docker | any current | Docker Engine or Docker Desktop with WSL integration |
 | Git, Python | 3.12+ | `apt install git python3-venv python3-pip` |
 
+### Ansible
+
+Ubuntu 24.04 blocks `pip install` outside a virtual environment (PEP 668), so
+Ansible lives in its own venv:
+
+    python3 -m venv ~/.venvs/ansible
+    ~/.venvs/ansible/bin/pip install ansible
+    ~/.venvs/ansible/bin/ansible-galaxy collection install -r ansible/requirements.yml
+
+Run playbooks with the full path:
+
+    cd ansible
+    ~/.venvs/ansible/bin/ansible-playbook site.yml
+
 ### Credentials you supply
 
 Nothing here is in the repository. Each is yours to create.
