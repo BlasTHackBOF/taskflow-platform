@@ -1,0 +1,6 @@
+---
+# Pinned: Jenkins plugins are compiled against a core version; a silently
+# moving `lts` tag is how a morning disappears. Bump deliberately.
+jenkins_image: "jenkins/jenkins:2.568.1-lts-jdk21"
+jenkins_volume: jenkins-home
+jenkins_http_port: 8080

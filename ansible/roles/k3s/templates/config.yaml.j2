@@ -1,0 +1,14 @@
+# {{ ansible_managed }}
+# The public IP is in the TLS SAN so kubectl from the operator machine
+# can verify the API server's certificate. It changes on every
+# stop/start; re-running the playbook rewrites this file and restarts
+# k3s, which re-signs the serving certificate with the new address.
+token: "{{ vault_k3s_token }}"
+tls-san:
+  - "{{ ansible_host }}"
+write-kubeconfig-mode: "0600"
+# metrics-server is disabled: the monitoring phase scrapes with
+# Prometheus, and a 911 MiB node cannot afford components that earn
+# nothing.
+disable:
+  - metrics-server

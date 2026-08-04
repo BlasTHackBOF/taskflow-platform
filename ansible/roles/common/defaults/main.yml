@@ -1,0 +1,11 @@
+---
+common_timezone: Etc/UTC
+common_packages:
+  - ca-certificates
+  - curl
+  - git
+  - htop
+  - jq
+  - unattended-upgrades
+  - unzip
+  - vim

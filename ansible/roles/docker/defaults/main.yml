@@ -1,0 +1,6 @@
+---
+# Pinned: Docker drift between the two nodes (or between rebuilds) would
+# surface as "works on one node" bugs. Versions verified against the
+# noble/stable channel of download.docker.com.
+docker_version: "5:29.7.1-1~ubuntu.24.04~noble"
+containerd_version: "2.2.6-1~ubuntu.24.04~noble"

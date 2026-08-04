@@ -1,0 +1,5 @@
+---
+# Cross-role variables. Secrets live in vault.yaml (Vault-encrypted);
+# this file only ever references them, never contains them.
+admin_user: taskflow
+admin_ssh_public_key: "{{ lookup('file', lookup('env', 'HOME') + '/.ssh/taskflow-operator.pub') }}"

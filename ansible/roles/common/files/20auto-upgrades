@@ -1,0 +1,3 @@
+// Ansible-managed: daily package list refresh + unattended security upgrades.
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";

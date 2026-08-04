@@ -1,0 +1,22 @@
+---
+# Terraform created the servers; this playbook makes them useful.
+# Nothing here touches AWS resources — that boundary is deliberate.
+
+- name: Baseline and Docker on every node
+  hosts: all
+  become: true
+  roles:
+    - common
+    - docker
+
+- name: k3s on the application node
+  hosts: app
+  become: true
+  roles:
+    - k3s
+
+- name: Jenkins on the CI node
+  hosts: ci
+  become: true
+  roles:
+    - jenkins

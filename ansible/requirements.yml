@@ -1,0 +1,10 @@
+---
+# Collections beyond ansible.builtin, pinned to the versions this was
+# written and verified against. Install: ansible-galaxy collection install -r requirements.yml
+collections:
+  - name: community.docker
+    version: "5.2.1"
+  - name: community.general
+    version: "13.2.0"
+  - name: ansible.posix
+    version: "2.2.2"

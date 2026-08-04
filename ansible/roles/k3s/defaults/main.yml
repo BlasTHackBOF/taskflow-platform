@@ -1,0 +1,9 @@
+---
+# Pinned: the cluster version defines which Kubernetes API the Helm
+# charts and manifests are written against. Bump deliberately, in review.
+k3s_version: v1.36.2+k3s1
+k3s_install_script: /usr/local/bin/k3s-install.sh
+k3s_swapfile: /swapfile
+k3s_swap_size: 2G
+# Fetched kubeconfig lands at the repo root — `kubeconfig` is gitignored.
+kubeconfig_local_path: "{{ playbook_dir }}/../kubeconfig"
