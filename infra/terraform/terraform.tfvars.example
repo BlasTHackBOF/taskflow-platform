@@ -1,0 +1,11 @@
+# Copy to terraform.tfvars (gitignored) and fill in the real values.
+
+aws_region = "us-east-1"
+
+# Your workstation's public IP, as a /32. Never widen this.
+operator_cidr = "203.0.113.10/32"
+
+# Public half of the operator key pair; generate with
+#   ssh-keygen -t ed25519 -f ~/.ssh/taskflow-operator
+# and paste the .pub content here. The private key stays on your machine.
+ssh_public_key = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAA... operator@workstation"
