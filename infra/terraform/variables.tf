@@ -50,8 +50,8 @@ variable "jenkins_instance_type" {
 
 variable "k3s_instance_type" {
   type        = string
-  description = "Application node type. t3.micro sits inside the Free Tier 750 h/month allowance on eligible accounts."
-  default     = "t3.micro"
+  description = "Application node type. Grown from the Free Tier t3.micro: 911 MiB could not hold the k3s control plane, let alone the workload (ADR-0008). The project's second deliberately paid resource."
+  default     = "t3.small"
 }
 
 variable "jenkins_volume_gb" {

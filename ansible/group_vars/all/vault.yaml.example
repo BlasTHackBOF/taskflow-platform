@@ -1,0 +1,15 @@
+---
+# Plaintext twin of vault.yaml (which is committed ONLY in encrypted
+# form). To recreate: copy this to vault.yaml, fill in real values, then
+#   ansible-vault encrypt group_vars/all/vault.yaml
+# The vault password lives in vault_pass.txt at the repo root — that
+# file is gitignored and never enters the repository (ADR-0002).
+#
+# Generating values:
+#   openssl rand -base64 18            # admin password
+#   openssl passwd -6 '<password>'     # its sha512-crypt hash (deterministic input to the user module)
+#   openssl rand -hex 32               # k3s cluster token
+
+vault_admin_password: "CHANGE_ME"
+vault_admin_password_hash: "$6$CHANGE_ME"
+vault_k3s_token: "CHANGE_ME"

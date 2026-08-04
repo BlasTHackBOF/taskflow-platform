@@ -3,7 +3,7 @@
 # env-control.sh — start, stop and inspect the TaskFlow EC2 environment.
 #
 # The environment is billed by the hour and exists only while someone is
-# working. Left running 24/7 it costs ≈$32.50/month; stopped it costs
+# working. Left running 24/7 it costs ≈$40/month; stopped it costs
 # ≈$2.40/month (EBS only — the public IPv4 addresses are auto-assigned
 # and released on stop). Itemised in infra/terraform/README.md.
 #

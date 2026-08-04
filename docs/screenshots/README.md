@@ -17,7 +17,8 @@ so the folder reads as a timeline rather than an unordered pile.
 | `03-compose-stack-healthy.png` | The full local stack: database healthy, migrations run and exited, application healthy |
 | `04-terraform-apply-and-ssh.png` | `terraform apply` creating 23 resources, the outputs, and an SSH session confirming Ubuntu 24.04 |
 | `05-bash-env-control-status.png` | `env-control.sh status` listing both instances with state, type and uptime |
-
+| `06-ansible-idempotent.png` | A second playbook run reporting `changed=0` on both nodes |
+| `07-kubectl-cluster-ready.png` | The k3s node Ready and all pods running, reached from the operator machine |
 ## Still needed
 
 - [ ] `04-aws-console-instances.png` — both instances in the EC2 console, showing this exists in the cloud and not only in a terminal

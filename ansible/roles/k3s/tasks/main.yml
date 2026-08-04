@@ -1,0 +1,98 @@
+---
+# The t3.micro has 911 MiB of RAM — enough to run k3s, but with no
+# headroom: the first post-install restart sent the node into an OOM
+# thrash (40 MB available, multi-second datastore queries, apiserver
+# timeouts). Swap is what turns memory pressure from "unusable" into
+# "slow"; k3s runs its kubelet with fail-swap-on disabled, so this is
+# supported.
+- name: Create the swapfile
+  ansible.builtin.command: fallocate -l {{ k3s_swap_size }} {{ k3s_swapfile }}
+  args:
+    creates: "{{ k3s_swapfile }}"
+  register: k3s_swapfile_created
+
+- name: Restrict swapfile permissions
+  ansible.builtin.file:
+    path: "{{ k3s_swapfile }}"
+    owner: root
+    group: root
+    mode: "0600"
+
+- name: Format the swapfile
+  ansible.builtin.command: mkswap {{ k3s_swapfile }}
+  when: k3s_swapfile_created.changed
+
+- name: Persist swap across reboots
+  ansible.posix.mount:
+    src: "{{ k3s_swapfile }}"
+    path: none
+    fstype: swap
+    opts: sw
+    state: present
+
+- name: Enable swap now
+  ansible.builtin.command: swapon {{ k3s_swapfile }}
+  when: ansible_memory_mb.swap.total == 0
+
+- name: Create the k3s config directory
+  ansible.builtin.file:
+    path: /etc/rancher/k3s
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Write the k3s configuration (cluster token, public-IP TLS SAN)
+  ansible.builtin.template:
+    src: config.yaml.j2
+    dest: /etc/rancher/k3s/config.yaml
+    owner: root
+    group: root
+    mode: "0600"
+  notify: Restart k3s
+
+- name: Check the installed k3s version
+  ansible.builtin.command: /usr/local/bin/k3s --version
+  register: k3s_installed
+  changed_when: false
+  failed_when: false
+  check_mode: false # read-only probe; must run in --check too, or the
+  # install tasks below cannot tell they are already satisfied
+
+- name: Download the k3s install script
+  ansible.builtin.get_url:
+    url: https://get.k3s.io
+    dest: "{{ k3s_install_script }}"
+    mode: "0755"
+  when: k3s_version not in (k3s_installed.stdout | default(''))
+
+- name: Install k3s {{ k3s_version }}
+  ansible.builtin.command: "{{ k3s_install_script }}"
+  environment:
+    INSTALL_K3S_VERSION: "{{ k3s_version }}"
+  when: k3s_version not in (k3s_installed.stdout | default(''))
+
+- name: Enable and start k3s
+  ansible.builtin.service:
+    name: k3s
+    state: started
+    enabled: true
+
+- name: Wait for the k3s API
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 6443
+    timeout: 120
+
+- name: Read the cluster kubeconfig
+  ansible.builtin.slurp:
+    src: /etc/rancher/k3s/k3s.yaml
+  register: k3s_kubeconfig
+
+- name: Write the operator kubeconfig pointed at the public address
+  ansible.builtin.copy:
+    content: "{{ k3s_kubeconfig.content | b64decode | replace('https://127.0.0.1:6443', 'https://' ~ ansible_host ~ ':6443') }}"
+    dest: "{{ kubeconfig_local_path }}"
+    mode: "0600"
+  delegate_to: localhost
+  become: false

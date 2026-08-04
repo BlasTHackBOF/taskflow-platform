@@ -1,0 +1,35 @@
+---
+- name: Look up the docker group id
+  ansible.builtin.getent:
+    database: group
+    key: docker
+
+- name: Create the Jenkins home volume
+  community.docker.docker_volume:
+    name: "{{ jenkins_volume }}"
+
+# Home on a named volume: the container is disposable, /var/jenkins_home
+# is not. The docker socket + docker group make the pipeline phase able
+# to build images with the host's daemon.
+- name: Run Jenkins
+  community.docker.docker_container:
+    name: jenkins
+    image: "{{ jenkins_image }}"
+    state: started
+    restart_policy: unless-stopped
+    published_ports:
+      - "{{ jenkins_http_port }}:8080"
+    volumes:
+      - "{{ jenkins_volume }}:/var/jenkins_home"
+      - /var/run/docker.sock:/var/run/docker.sock
+    groups:
+      - "{{ ansible_facts.getent_group['docker'][1] }}"
+
+- name: Wait for the Jenkins UI to answer
+  ansible.builtin.uri:
+    url: "http://127.0.0.1:{{ jenkins_http_port }}/login"
+    status_code: 200
+  register: jenkins_ui
+  retries: 30
+  delay: 5
+  until: jenkins_ui.status == 200
