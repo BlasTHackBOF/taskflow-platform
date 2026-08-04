@@ -158,3 +158,4 @@ Decisions with lasting consequences are recorded individually in
 | [0005](decisions/0005-python-slim-multi-stage-image.md) | python:slim base, multi-stage build |
 | [0006](decisions/0006-s3-state-backend-with-native-locking.md) | Terraform state in S3 with native lockfile locking, no DynamoDB |
 | [0007](decisions/0007-dynamic-inventory-and-role-split.md) | Ansible inventory resolved from Terraform + live AWS, four-role split |
+| [0008](decisions/0008-swap-on-the-k3s-node.md) | Swap on the k3s node — why, measured cost, removal criteria |
