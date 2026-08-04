@@ -37,6 +37,21 @@ Two things follow:
 - With the stop-between-sessions discipline (architecture.md), the only
   charge that accrues around the clock is EBS: at most $2.40/month.
 
+## Daily workflow
+
+The environment exists only while someone is working:
+
+    scripts/env-control.sh start    # begin a session — boots both nodes, prints the NEW public IPs
+    scripts/env-control.sh status   # state, type, public IP and uptime at a glance
+    scripts/env-control.sh stop     # end a session — asks first; --force skips the prompt
+
+Every start assigns fresh public IPs, and `terraform output` keeps
+showing whatever addresses were in state at the last refresh — empty or
+stale the moment an instance stops. Treat the script's printed IPs as
+the address of record, and re-point anything that held the old ones
+(SSH sessions, the Ansible inventory in the next phase). The CI→k3s
+security-group rule is group-to-group precisely so it survives this.
+
 ## Free Tier fine print
 
 The 750-hour instance/IPv4 allowances above are the *legacy* Free Tier.
