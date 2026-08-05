@@ -5,5 +5,10 @@
 # is the rebuild trigger: bump it when the Dockerfile changes.
 jenkins_image: "taskflow-jenkins:2.568.1-tools1"
 jenkins_build_dir: /opt/taskflow/jenkins
+# CI agent image for the pipeline's lint/test stages: pinned python base
+# with the dev toolchain preinstalled (docker/ci/Dockerfile). The -ciN
+# suffix is the rebuild trigger, same convention as -toolsN above.
+ci_agent_image: "taskflow-ci:py3.12.12-ci1"
+ci_agent_build_dir: /opt/taskflow/ci-agent
 jenkins_volume: jenkins-home
 jenkins_http_port: 8080

@@ -32,18 +32,24 @@ pipeline {
       }
     }
 
+    // Lint and test run in the prebuilt CI agent image (built by the
+    // Ansible jenkins role from docker/ci/Dockerfile): the pinned
+    // production python base with the dev toolchain preinstalled, and a
+    // real uid-1000 user so pip has a writable HOME. The pip line syncs
+    // the delta against this commit's pins — a no-op when nothing
+    // changed, correct when a branch bumps a version.
     stage('Lint') {
-      agent { docker { image 'python:3.12.12-slim-bookworm'; reuseNode true } }
+      agent { docker { image 'taskflow-ci:py3.12.12-ci1'; reuseNode true } }
       steps {
-        sh 'pip install --quiet ruff==0.16.1 && ruff check app'
+        sh 'pip install --user --quiet -r app/requirements-dev.txt && ruff check app'
       }
     }
 
     stage('Test') {
-      agent { docker { image 'python:3.12.12-slim-bookworm'; reuseNode true } }
+      agent { docker { image 'taskflow-ci:py3.12.12-ci1'; reuseNode true } }
       steps {
         sh '''
-          pip install --quiet -r app/requirements-dev.txt
+          pip install --user --quiet -r app/requirements-dev.txt
           cd app
           mkdir -p reports
           python -m pytest --junitxml=reports/junit.xml \

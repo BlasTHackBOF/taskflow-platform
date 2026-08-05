@@ -29,6 +29,35 @@
       path: "{{ jenkins_build_dir }}"
     force_source: "{{ jenkins_dockerfile.changed }}"
 
+- name: Create the CI agent image build directory
+  ansible.builtin.file:
+    path: "{{ ci_agent_build_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Assemble the CI agent build context
+  ansible.builtin.copy:
+    src: "{{ item.src }}"
+    dest: "{{ ci_agent_build_dir }}/{{ item.dest }}"
+    owner: root
+    group: root
+    mode: "0644"
+  loop:
+    - { src: "{{ playbook_dir }}/../docker/ci/Dockerfile", dest: Dockerfile }
+    - { src: "{{ playbook_dir }}/../app/requirements.txt", dest: requirements.txt }
+    - { src: "{{ playbook_dir }}/../app/requirements-dev.txt", dest: requirements-dev.txt }
+  register: ci_agent_context
+
+- name: Build the CI agent image
+  community.docker.docker_image:
+    name: "{{ ci_agent_image }}"
+    source: build
+    build:
+      path: "{{ ci_agent_build_dir }}"
+    force_source: "{{ ci_agent_context.changed }}"
+
 - name: Create the Jenkins home volume
   community.docker.docker_volume:
     name: "{{ jenkins_volume }}"
