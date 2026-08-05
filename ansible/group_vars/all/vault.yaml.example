@@ -19,3 +19,6 @@ vault_k3s_token: "CHANGE_ME"
 vault_postgres_password: "CHANGE_ME"
 vault_flask_secret_key: "CHANGE_ME"
 vault_ghcr_read_token: "CHANGE_ME_read_packages_PAT"
+# Monitoring phase (ADR-0012): Grafana admin login — the chart is told
+# to read the existing `grafana-admin` Secret, never a default password.
+vault_grafana_admin_password: "CHANGE_ME"

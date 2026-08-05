@@ -1,0 +1,36 @@
+# The one alert this environment actually needs.
+#
+# Memory is the node's binding constraint: every real failure this
+# cluster has had — the OOM thrash during provisioning, the resize —
+# was memory. Swap (ADR-0008) converts those crashes into latency,
+# which means the node can now degrade *silently*. Sustained swap-in is
+# the tripwire ADR-0008 promised: it fires while the box is still slow
+# instead of dead, before the OOM killer picks between the apiserver
+# and the workload. Threshold: >64 pages/s (≈256 KiB/s) page-IN for 15
+# minutes — brief spikes after a deploy are normal, a quarter hour of
+# steady paging means the ADR-0009 memory budget no longer fits and the
+# sizing decision needs revisiting.
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: taskflow-node-alerts
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: taskflow
+spec:
+  groups:
+    - name: node-memory
+      rules:
+        - alert: NodeSustainedSwapIn
+          expr: rate(node_vmstat_pswpin[10m]) > 64
+          for: 15m
+          labels:
+            severity: warning
+          annotations:
+            summary: "Node is swapping in continuously (> 256 KiB/s for 15m)"
+            description: >-
+              Sustained page-ins mean the working set no longer fits in
+              RAM: the ADR-0009 memory budget has been outgrown and the
+              node is running on the ADR-0008 crash barrier. Check
+              per-container memory on the Grafana dashboard, then
+              revisit instance sizing before the OOM killer does.

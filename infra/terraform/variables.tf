@@ -56,12 +56,12 @@ variable "k3s_instance_type" {
 
 variable "jenkins_volume_gb" {
   type        = number
-  description = "CI node root volume (gp3). Together with k3s_volume_gb this should stay at or under the 30 GB Free Tier EBS allowance."
+  description = "CI node root volume (gp3). Total EBS is a deliberate 10 GB over the 30 GB Free Tier allowance (+$0.80/month) — see k3s_volume_gb and ADR-0012."
   default     = 20
 }
 
 variable "k3s_volume_gb" {
   type        = number
-  description = "Application node root volume (gp3). See jenkins_volume_gb for the shared 30 GB ceiling."
-  default     = 10
+  description = "Application node root volume (gp3). Grown from 10 GB after a disk eviction loop: OS + swapfile + per-SHA images + the monitoring stack need eviction-threshold headroom kubelet can actually keep (ADR-0012)."
+  default     = 20
 }

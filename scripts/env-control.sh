@@ -3,8 +3,8 @@
 # env-control.sh — start, stop and inspect the TaskFlow EC2 environment.
 #
 # The environment is billed by the hour and exists only while someone is
-# working. Left running 24/7 it costs ≈$40/month; stopped it costs
-# ≈$2.40/month (EBS only — the public IPv4 addresses are auto-assigned
+# working. Left running 24/7 it costs ≈$41/month; stopped it costs
+# ≈$3.20/month (EBS only — the public IPv4 addresses are auto-assigned
 # and released on stop). Itemised in infra/terraform/README.md.
 #
 # Public IPs CHANGE on every stop/start cycle. `start` prints the new
@@ -140,7 +140,7 @@ cmd_stop() {
   aws ec2 stop-instances --region "$REGION" --instance-ids "${to_stop[@]}" --output text >/dev/null
   echo "Waiting until they are stopped..."
   aws ec2 wait instance-stopped --region "$REGION" --instance-ids "${to_stop[@]}"
-  echo "Stopped. Billing is now EBS only (≈\$2.40/month)."
+  echo "Stopped. Billing is now EBS only (≈\$3.20/month)."
 }
 
 main() {

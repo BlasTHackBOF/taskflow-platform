@@ -147,6 +147,13 @@ pipeline {
       // Leave the node as found: no session, no stale build layers, no
       // workspace eating the disk.
       sh 'docker logout ghcr.io >/dev/null 2>&1 || true'
+      // Tagged app images accumulate one per deploy and `prune` only
+      // touches dangling layers — keep the newest three (current,
+      // rollback, one spare) and drop the rest.
+      sh '''
+        docker images "$IMAGE_REPO" --format "{{.Tag}}" \
+          | tail -n +4 | xargs -r -I{} docker rmi "$IMAGE_REPO:{}" || true
+      '''
       sh 'docker image prune -f --filter "until=24h" >/dev/null 2>&1 || true'
       deleteDir()
     }
