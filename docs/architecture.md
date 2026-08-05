@@ -4,15 +4,15 @@ TaskFlow is a small task-board service. This document describes the platform
 that builds, deploys and operates it — which is where essentially all of the
 engineering in this repository lives.
 
-> **Status.** Sections describing the local stack reflect what is built.
-> Sections describing AWS, CI/CD and monitoring describe the target design and
-> are marked accordingly. This document is updated as each phase lands.
+> **Status.** Every section below describes what is built and running, not a
+> target design. Where a decision has lasting consequences it links to the ADR
+> that records the reasoning and the cost.
 
 ## Overview
 
 ```
                      ┌──────────────────────────────────────────────┐
-                     │        AWS eu-central-1  ·  VPC              │
+                     │        AWS us-east-1  ·  VPC              │
                      │                                              │
   ┌──────────┐       │  ┌────────────────┐    ┌──────────────────┐  │
   │  GitHub  │──────►│  │  CI node       │───►│  Application     │  │
@@ -73,7 +73,7 @@ dependency blip into a cluster-wide `CrashLoopBackOff`. `/readyz` does check
 the database, so during an outage pods stay alive and simply stop receiving
 traffic — and recover the instant the dependency returns.
 
-### Container image *(planned)*
+### Container image
 
 A multi-stage Dockerfile: dependencies are resolved in a build stage and the
 runtime stage carries only the application and its installed packages. The
@@ -81,13 +81,13 @@ container runs as a non-root user and serves through gunicorn. Logs go to
 stdout as structured JSON and are never written to a file inside the
 container, so the orchestrator owns log collection.
 
-### Local stack *(planned)*
+### Local stack
 
 Docker Compose brings up the application together with PostgreSQL as a single
 command, so a new engineer can clone the repository and have a working stack
 without reading a setup guide.
 
-### Infrastructure *(planned)*
+### Infrastructure
 
 Two EC2 instances in a purpose-built VPC. Terraform is the only mechanism that
 defines infrastructure; the AWS console is used for inspection and debugging,
@@ -97,14 +97,14 @@ DynamoDB lock table.
 Instances are sized against a fixed credit budget and are stopped between
 working sessions by a script in `scripts/`, rather than left running.
 
-### Configuration management *(planned)*
+### Configuration management
 
 Ansible turns a bare Ubuntu instance into a working node: users and SSH
 hardening, package installation, k3s, and the monitoring agents. Roles are
 separated by concern and all tasks are idempotent — a second run changes
 nothing.
 
-### CI/CD *(planned)*
+### CI/CD
 
 Jenkins responds differently depending on where a change lands:
 
@@ -116,7 +116,7 @@ Jenkins responds differently depending on where a change lands:
 A branch that fails any stage cannot be merged, because `main` requires the
 check to pass.
 
-### Monitoring *(planned)*
+### Monitoring
 
 Prometheus scrapes the application's `/metrics` endpoint alongside node and
 cluster metrics. Grafana presents a dashboard covering request rate, error

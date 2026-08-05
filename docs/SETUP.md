@@ -65,7 +65,7 @@ FLASK_ENV=testing .venv/bin/python -m pytest
 .venv/bin/ruff check .
 ```
 
-Expect 69 passing tests and coverage above 90%. A JUnit report lands in
+Expect 70 passing tests and coverage above 90%. A JUnit report lands in
 `app/reports/junit.xml` — the same file the Jenkins pipeline consumes.
 
 ### Tear down

@@ -109,9 +109,8 @@ taskflow-platform/
 ├── app/                  Application source, tests, migrations
 ├── docker/               Three Dockerfiles: app, CI agent, Jenkins
 ├── docker-compose.yml    Full local stack
-├── infra/
-│   ├── terraform/        AWS infrastructure as code
-│   └── ansible/          Server configuration, four roles
+├── infra/terraform/      AWS infrastructure as code
+├── ansible/              Server configuration, four roles
 ├── kubernetes/
 │   ├── manifests/        Raw manifests
 │   └── helm/taskflow/    The chart that supersedes them
