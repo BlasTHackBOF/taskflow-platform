@@ -1,0 +1,72 @@
+# Defaults are the production posture (the same fail-safe convention as
+# the app's config: you get prod unless you explicitly ask for less).
+# values-dev.yaml / values-prod.yaml carry only what differs.
+
+nameOverride: ""
+fullnameOverride: ""
+
+replicaCount: 1
+
+image:
+  repository: ghcr.io/blasthackbof/taskflow-app
+  # Empty tag falls back to the chart's appVersion. Deploys override
+  # this with the git SHA being shipped — never a floating tag.
+  tag: ""
+  pullPolicy: IfNotPresent
+
+imagePullSecrets:
+  - name: ghcr-pull
+
+# Both Secrets are created from the Ansible vault, never by this chart
+# (ADR-0002/0004; commands in NOTES.txt). The chart only references
+# this one by name.
+existingSecret: taskflow-secrets
+
+serviceAccount:
+  # Defaults to the release fullname. The account carries no role
+  # bindings and mounts no token — the app never talks to the API.
+  name: ""
+
+app:
+  gunicornWorkers: 2
+  logFormat: json
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+migrate:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+postgres:
+  image:
+    repository: postgres
+    tag: 16.14-alpine
+  database: taskflow
+  user: taskflow
+  storage:
+    className: local-path
+    size: 1Gi
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+ingress:
+  enabled: true
+  className: traefik
+  # Empty host answers on any address — production has no stable DNS
+  # name because the node IP changes on every stop/start.
+  host: ""

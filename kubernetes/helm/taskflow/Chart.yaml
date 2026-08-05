@@ -1,0 +1,9 @@
+apiVersion: v2
+name: taskflow
+description: TaskFlow — Flask app, PostgreSQL and schema migrations as one release
+type: application
+# `version` is the chart — the packaging. `appVersion` is the application
+# build the chart deploys when no tag is set. They move independently and
+# mean different things on a rollback — see ADR-0010.
+version: 0.1.0
+appVersion: "6e7f8f880a51"

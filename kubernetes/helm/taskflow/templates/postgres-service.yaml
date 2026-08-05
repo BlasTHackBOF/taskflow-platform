@@ -1,0 +1,18 @@
+# Headless governing Service: single-replica DNS resolves straight to
+# the pod; a database is never load-balanced.
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "taskflow.postgres.fullname" . }}
+  labels:
+    {{- include "taskflow.labels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+spec:
+  clusterIP: None
+  selector:
+    {{- include "taskflow.selectorLabels" . | nindent 4 }}
+    app.kubernetes.io/component: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres
