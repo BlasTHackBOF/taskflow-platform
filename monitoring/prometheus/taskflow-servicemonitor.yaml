@@ -1,0 +1,22 @@
+# Scrape the application's own /metrics. Lives in the monitoring
+# namespace with the rest of the observability config; selects the app
+# Service across namespaces by its chart-applied labels.
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: taskflow
+  namespace: monitoring
+  labels:
+    app.kubernetes.io/name: taskflow
+spec:
+  namespaceSelector:
+    matchNames:
+      - taskflow
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: taskflow
+      app.kubernetes.io/component: app
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

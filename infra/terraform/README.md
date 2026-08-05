@@ -12,15 +12,15 @@ On-demand rates, us-east-1, at the time of writing. A month is 730 hours.
 | CI node (t3.small) | $0.0208/h | $15.18 | None — 1 GiB does not run Jenkins |
 | App node (t3.small) | $0.0208/h | $15.18 | None — grown from the Free Tier t3.micro, whose 911 MiB could not hold k3s (ADR-0008) |
 | Public IPv4 × 2 | $0.005/h each | $3.65 each, $7.30 both | 750 IPv4-hours/month — covers roughly one address running 24/7 |
-| EBS gp3, 30 GB total | $0.08/GB-month | $2.40 | 30 GB allowance → $0 |
+| EBS gp3, 40 GB total | $0.08/GB-month | $3.20 | 30 GB allowance covers 30 → $0.80 (grown for the monitoring phase, ADR-0012) |
 | S3 (tfstate + artifacts) | $0.023/GB-month | cents | 5 GB allowance |
 
 Worst case, 24/7 with no Free Tier at all:
-$15.18 + $15.18 + $7.30 + $2.40 = **$40.06/month**, plus S3 cents. On
-an account with the legacy Free Tier: $15.18 + $15.18 + $3.65 =
-**$34.01/month** — the instance allowance only ever covered t3.micro,
-so since the app node grew (ADR-0008) both nodes bill in full and only
-one public IPv4 and the EBS remain covered.
+$15.18 + $15.18 + $7.30 + $3.20 = **$40.86/month**, plus S3 cents. On
+an account with the legacy Free Tier: $15.18 + $15.18 + $3.65 + $0.80 =
+**$34.81/month** — the instance allowance only ever covered t3.micro,
+so since the app node grew (ADR-0008) both nodes bill in full; one
+public IPv4 and 30 of the 40 EBS GB remain covered.
 
 ## The line most people forget
 
@@ -37,7 +37,7 @@ Two things follow:
   every start, which is why CI→k3s access is granted group-to-group in
   the security groups rather than by address.
 - With the stop-between-sessions discipline (architecture.md), the only
-  charge that accrues around the clock is EBS: at most $2.40/month.
+  charge that accrues around the clock is EBS: at most $3.20/month.
 
 ## Daily workflow
 

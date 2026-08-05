@@ -1,0 +1,172 @@
+# kube-prometheus-stack 88.1.5, tuned for a single-node cluster on a
+# 2 GiB machine that also runs the workload being monitored. Chart
+# defaults assume a fleet; every cut below is a decision, with the
+# measured before/after in ADR-0012.
+#
+# What survives untouched: Prometheus scraping the app, Grafana serving
+# the committed RED dashboard, the Alertmanager rule, node-exporter
+# (it feeds the swap alert — the one panel-less exporter that earns
+# its memory).
+#
+# Install:
+#   kubectl create namespace monitoring
+#   kubectl -n monitoring create secret generic grafana-admin \
+#     --from-literal=admin-user=admin \
+#     --from-literal=admin-password="$(ansible-vault view ansible/group_vars/all/vault.yaml | grep vault_grafana_admin_password | cut -d'"' -f2)"
+#   kubectl -n monitoring create configmap taskflow-dashboard \
+#     --from-file=monitoring/grafana/taskflow-red.json
+#   helm install kps prometheus-community/kube-prometheus-stack \
+#     --version 88.1.5 -n monitoring -f monitoring/prometheus/values.yaml --wait
+#   kubectl apply -f monitoring/prometheus/taskflow-servicemonitor.yaml \
+#                 -f monitoring/prometheus/taskflow-alerts.yaml
+
+fullnameOverride: kps
+
+# The stock rule pack evaluates ~150 alerts written for a fleet; we
+# ship the one rule that matters here (taskflow-alerts.yaml).
+defaultRules:
+  create: false
+
+# Cut: object-state metrics. Nothing on the dashboard reads them.
+kubeStateMetrics:
+  enabled: false
+
+# Cut: every control-plane scrape, including the kubelet/cadvisor job.
+# k3s embeds the control plane in one process (no scheduler/etcd pods to
+# find), the apiserver job alone is thousands of series — and cadvisor
+# is thousands more that no panel reads. Dropping them is what lets
+# Prometheus itself fit in 256 Mi. Node-level memory/CPU still arrives
+# via node-exporter, which the swap alert needs anyway.
+kubeApiServer:
+  enabled: false
+kubeControllerManager:
+  enabled: false
+kubeScheduler:
+  enabled: false
+kubeProxy:
+  enabled: false
+kubeEtcd:
+  enabled: false
+coreDns:
+  enabled: false
+kubelet:
+  enabled: false
+
+prometheusOperator:
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 200m
+      memory: 128Mi
+
+prometheus:
+  # Cut: Prometheus scraping itself — self-observability is a luxury
+  # this node cannot fund.
+  serviceMonitor:
+    selfMonitor: false
+  prometheusSpec:
+    # 24h retention and 60s scrape, deliberately: the dashboard answers
+    # "what is happening", not "what happened last week". Storage is
+    # emptyDir — history dies with the pod, which a 24h window already
+    # accepts.
+    retention: 24h
+    scrapeInterval: 60s
+    # Pick up ServiceMonitors/Rules by existence, not Helm-release
+    # labels — ours live in this repo, not in the chart.
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+    ruleSelectorNilUsesHelmValues: false
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+
+alertmanager:
+  enabled: true
+  serviceMonitor:
+    selfMonitor: false
+  # No receivers beyond the built-in null route: delivery integrations
+  # are cut; firing alerts are read in the UI.
+  alertmanagerSpec:
+    resources:
+      requests:
+        cpu: 10m
+        memory: 32Mi
+      limits:
+        cpu: 100m
+        memory: 64Mi
+
+grafana:
+  # Never a default password: the chart reads the vault-created Secret.
+  admin:
+    existingSecret: grafana-admin
+    userKey: admin-user
+    passwordKey: admin-password
+  serviceMonitor:
+    enabled: false
+  # Grafana 12 preinstalls app plugins from grafana.com on every start;
+  # minutes of CPU and network for plugins nobody uses. Off.
+  "grafana.ini":
+    plugins:
+      preinstall_disabled: true
+  # Cut: BOTH sidecars (~200 MB measured, the single largest saving).
+  # With one dashboard and one datasource, watch-and-reload machinery
+  # is overhead: the datasource is declared statically below and the
+  # dashboard ConfigMap is mounted directly into the provider path. The
+  # cost: dashboard changes need `kubectl create configmap ... -o yaml
+  # --dry-run=client | kubectl replace -f -` and a pod restart, instead
+  # of hot reload. Fair trade for 10% of the node's RAM.
+  defaultDashboardsEnabled: false
+  sidecar:
+    dashboards:
+      enabled: false
+    datasources:
+      enabled: false
+  datasources:
+    datasources.yaml:
+      apiVersion: 1
+      datasources:
+        - name: Prometheus
+          uid: prometheus
+          type: prometheus
+          url: http://kps-prometheus:9090
+          access: proxy
+          isDefault: true
+  dashboardProviders:
+    dashboardproviders.yaml:
+      apiVersion: 1
+      providers:
+        - name: taskflow
+          folder: ""
+          type: file
+          options:
+            path: /var/lib/grafana/dashboards/taskflow
+  dashboardsConfigMaps:
+    taskflow: taskflow-dashboard
+  resources:
+    requests:
+      cpu: 50m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 256Mi
+  # No ingress and no exposed port: Grafana is reached by the operator
+  # via `kubectl port-forward svc/kps-grafana 3000:80 -n monitoring` —
+  # zero public attack surface, no new security group rule.
+
+# Kept: the swap tripwire (ADR-0008) reads node_vmstat_pswpin from
+# node-exporter. ~20 MB for the alert that watches this node's actual
+# failure mode.
+prometheus-node-exporter:
+  resources:
+    requests:
+      cpu: 10m
+      memory: 16Mi
+    limits:
+      cpu: 100m
+      memory: 32Mi

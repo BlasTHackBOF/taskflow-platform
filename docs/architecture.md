@@ -162,3 +162,4 @@ Decisions with lasting consequences are recorded individually in
 | [0009](decisions/0009-namespace-storage-and-migration-job.md) | Dedicated namespace, local-path storage, migrations as a Job |
 | [0010](decisions/0010-helm-chart-structure-and-hooks.md) | Single self-contained chart, external secrets, post-install/pre-upgrade migration hook |
 | [0011](decisions/0011-jenkins-pipeline-and-credentials.md) | Declarative Jenkinsfile in-repo, branch/main stage split, credentials in the Jenkins store |
+| [0012](decisions/0012-monitoring-tuned-for-a-single-node-cluster.md) | kube-prometheus-stack tuned for one 2 GiB node — measured 780→270 MB, what was cut and why |
