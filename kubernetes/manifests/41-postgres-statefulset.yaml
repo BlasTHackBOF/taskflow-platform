@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+  namespace: taskflow
+spec:
+  serviceName: postgres
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          # Same pinned version as Compose — one database version
+          # everywhere, bumped deliberately.
+          image: postgres:16.14-alpine
+          ports:
+            - name: postgres
+              containerPort: 5432
+          envFrom:
+            - configMapRef:
+                name: taskflow-config
+          env:
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: taskflow-secrets
+                  key: POSTGRES_PASSWORD
+            # The volume mount point itself is not writable by initdb
+            # (the provisioner owns it); a subdirectory is.
+            - name: PGDATA
+              value: /var/lib/postgresql/data/pgdata
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/postgresql/data
+          readinessProbe:
+            exec:
+              command: ["pg_isready", "-U", "taskflow", "-d", "taskflow"]
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            exec:
+              command: ["pg_isready", "-U", "taskflow", "-d", "taskflow"]
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+  volumeClaimTemplates:
+    - metadata:
+        name: data
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        # k3s's bundled provisioner; the only storage this cluster has
+        # without leaving the AWS service allowlist. Data lives on the
+        # node's EBS root volume — survives pod restarts and instance
+        # stop/start, dies with the node. Trade-offs in ADR-0009.
+        storageClassName: local-path
+        resources:
+          requests:
+            storage: 1Gi

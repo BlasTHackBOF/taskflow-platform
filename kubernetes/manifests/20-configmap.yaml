@@ -1,0 +1,15 @@
+# Non-sensitive settings only. Everything with a password in it —
+# SECRET_KEY, POSTGRES_PASSWORD, DATABASE_URL — lives in the Secret
+# (see 30-secret.example.yaml).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: taskflow-config
+  namespace: taskflow
+data:
+  # FLASK_ENV is deliberately absent: unset resolves to the production
+  # config (fail-safe default, same reasoning as Compose).
+  GUNICORN_WORKERS: "2"
+  LOG_FORMAT: "json"
+  POSTGRES_DB: "taskflow"
+  POSTGRES_USER: "taskflow"

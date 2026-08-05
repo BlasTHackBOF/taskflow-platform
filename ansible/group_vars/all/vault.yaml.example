@@ -13,3 +13,9 @@
 vault_admin_password: "CHANGE_ME"
 vault_admin_password_hash: "$6$CHANGE_ME"
 vault_k3s_token: "CHANGE_ME"
+# Kubernetes-phase secrets (ADR-0004, ADR-0009): source of the
+# taskflow-secrets and ghcr-pull Secrets — see
+# kubernetes/manifests/30-secret.example.yaml for the creation commands.
+vault_postgres_password: "CHANGE_ME"
+vault_flask_secret_key: "CHANGE_ME"
+vault_ghcr_read_token: "CHANGE_ME_read_packages_PAT"
