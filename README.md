@@ -322,3 +322,43 @@ Recorded here rather than left to be discovered.
 Nine real failures, their root causes, and what each changed — including two disk
 exhaustions from different causes, a test that could not fail, and a key rotation that
 rotated nothing: [`docs/lessons-learned.md`](docs/lessons-learned.md).
+## On tooling
+
+Claude Code was used throughout this project, as an assistant rather than an
+author. It is worth being direct about what that did and did not mean.
+
+**Every decision in `docs/decisions/` is mine, including the ones where I
+overrode what the tool proposed.** Three examples:
+
+- It proposed SOPS with committed ciphertext for secrets. I rejected it:
+  Ansible Vault is on the required tool list and SOPS is not, and the argument
+  that "if it isn't in the repository it doesn't exist" misreads a delivery
+  rule as a mandate to commit secrets. ADR-0002 records both positions.
+- It recommended growing the application node a second time. I required the
+  measurement first — the estimate was ~500 Mi, the measured footprint 780 MB,
+  and the gap is the point of ADR-0012.
+- When it reported a fix without showing the output, I asked for the output.
+  Twice that turned up something: a verification step printing an artifact path
+  instead of the test result, and a test that derived its expectations from the
+  code under test and therefore could not fail.
+
+**I read every diff before approving a commit.** The working agreement was
+diagnose → change → verify → show me → stop, and the repository enforced it:
+`.claude/settings.json` denied `git push`, `git merge`, `terraform apply` and
+`git add -A`. It blocked `terraform apply` more than once, and the correct
+response each time was to read the plan and run it by hand — which is how the
+`FreeTierRestrictionError` on `t3.medium` was caught before it could surprise
+anyone.
+
+**What the tool was good for:** volume. Writing twelve ADRs, four Ansible roles
+and a Helm chart by hand would not have fit the schedule, and the parts it
+wrote first are the parts I reviewed hardest.
+
+**What it was not good for:** judgement about this project's constraints. It
+did not know that Prometheus outside the cluster would cost the Helm
+deliverable, that a Free Tier account refuses instance types above a ceiling,
+or that a document contradicting the system is worse than no document. Those
+came from reading the brief and from things breaking.
+
+The incidents in [`lessons-learned.md`](docs/lessons-learned.md) are the honest
+record of the second category.
