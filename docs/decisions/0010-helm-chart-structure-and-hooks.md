@@ -78,6 +78,13 @@ and on rollback you need to know which of the two you are reverting.
 installable as-committed while production pins its exact SHA in
 `values-prod.yaml`.
 
+One refinement learned in production: the pipeline stamps `appVersion`
+with the deployed SHA in its disposable checkout before `helm upgrade`,
+because the APP VERSION column of `helm history` reads from chart
+metadata — without the stamp, every revision reports the last
+*committed* appVersion rather than the build it deployed, and the
+history lies precisely when an incident has you reading it.
+
 ## Consequences
 
 - A deploy is `helm upgrade --set image.tag=<sha>`; a rollback is

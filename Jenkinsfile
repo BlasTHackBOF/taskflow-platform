@@ -103,6 +103,13 @@ pipeline {
       steps {
         withCredentials([file(credentialsId: 'k3s-kubeconfig', variable: 'KUBECONFIG')]) {
           sh '''
+            # Stamp the workspace copy of the chart so the APP VERSION
+            # column in `helm history` names the build each revision
+            # actually deployed — the moment you read that column is the
+            # moment it must not lie. The committed Chart.yaml keeps the
+            # last-released appVersion as the manual-install fallback;
+            # this checkout is disposable.
+            sed -i "s/^appVersion:.*/appVersion: \\"$GIT_SHA\\"/" kubernetes/helm/taskflow/Chart.yaml
             helm upgrade taskflow kubernetes/helm/taskflow -n taskflow \
               -f kubernetes/helm/taskflow/values-prod.yaml \
               --set image.tag="$GIT_SHA" \
