@@ -1,0 +1,56 @@
+# Migrations as a one-shot Job — the Compose init service carried
+# forward (its comment already named this Job as its successor), and the
+# reasoning survives the move: an entrypoint or initContainer step would
+# run migrations on EVERY pod start, so N replicas or a rolling update
+# means concurrent migrations racing each other. A Job runs exactly once
+# per rollout, its completion is observable, and it becomes a Helm
+# pre-upgrade hook in the next phase.
+#
+# Sequencing: raw manifests cannot express "Job before Deployment", so
+# ordering is operational — `kubectl wait --for=condition=complete
+# job/taskflow-migrate` before applying the Deployment. The safety net
+# underneath: /readyz and /startupz probe the database, so app pods
+# cannot enter Service rotation against a database that is not there.
+#
+# Job templates are immutable: each new image SHA means delete + apply,
+# which is fine for a resource whose whole life is one rollout.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: taskflow-migrate
+  namespace: taskflow
+spec:
+  backoffLimit: 3
+  template:
+    metadata:
+      labels:
+        app: taskflow-migrate
+    spec:
+      serviceAccountName: taskflow-app
+      restartPolicy: Never
+      imagePullSecrets:
+        - name: ghcr-pull
+      containers:
+        - name: migrate
+          image: ghcr.io/blasthackbof/taskflow-app:6e7f8f880a51
+          command: ["flask", "db", "upgrade"]
+          env:
+            - name: FLASK_APP
+              value: wsgi.py
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: taskflow-secrets
+                  key: SECRET_KEY
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: taskflow-secrets
+                  key: DATABASE_URL
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi

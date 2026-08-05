@@ -1,0 +1,17 @@
+# Headless: the StatefulSet needs a governing Service for stable pod
+# identity, and with a single replica the DNS name `postgres` resolves
+# straight to the pod — no load-balancing indirection for a database
+# that must never be load-balanced.
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  namespace: taskflow
+spec:
+  clusterIP: None
+  selector:
+    app: postgres
+  ports:
+    - name: postgres
+      port: 5432
+      targetPort: postgres

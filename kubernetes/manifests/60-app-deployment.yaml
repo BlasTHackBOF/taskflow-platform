@@ -1,0 +1,115 @@
+# Memory budget (node: 1907 Mi total, ~700 Mi OS + k3s control plane):
+#   postgres     256 Mi limit
+#   app          256 Mi limit
+#   migrate Job  256 Mi limit (transient, gone after rollout)
+#   ------------------------------------------------
+#   this phase   512 Mi steady-state ceiling
+#   reserved for monitoring phase: ~500 Mi (Prometheus ~300, Grafana
+#   ~150, exporters ~50)
+# Worst case 700 + 512 + 500 ≈ 1712 Mi against 1907 Mi — ~200 Mi slack,
+# with the ADR-0008 swapfile strictly as crash barrier behind it.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: taskflow
+  namespace: taskflow
+  labels:
+    app: taskflow
+spec:
+  replicas: 1
+  # A deploy must not drop traffic: surge the new pod up beside the old
+  # one, let readiness admit it, only then retire the old. With
+  # maxUnavailable 0 the old pod cannot be taken before its replacement
+  # is Ready.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 0
+      maxSurge: 1
+  selector:
+    matchLabels:
+      app: taskflow
+  template:
+    metadata:
+      labels:
+        app: taskflow
+    spec:
+      serviceAccountName: taskflow-app
+      imagePullSecrets:
+        - name: ghcr-pull
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10001
+        runAsGroup: 10001
+        seccompProfile:
+          type: RuntimeDefault
+      containers:
+        - name: taskflow
+          # Tagged by git SHA, never latest: `kubectl rollout undo` (and
+          # any future incident) must land on a known, immutable build.
+          image: ghcr.io/blasthackbof/taskflow-app:6e7f8f880a51
+          ports:
+            - name: http
+              containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: taskflow-config
+          env:
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: taskflow-secrets
+                  key: SECRET_KEY
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: taskflow-secrets
+                  key: DATABASE_URL
+          # Startup owns the boot window: up to 24 × 5 s = 120 s for the
+          # first successful database round-trip, during which liveness
+          # is held off — a pod that is merely slow to start must not be
+          # killed for it. Liveness (/healthz) deliberately checks no
+          # dependencies, so a database outage degrades to "unready",
+          # never to a restart storm.
+          startupProbe:
+            httpGet:
+              path: /startupz
+              port: http
+            periodSeconds: 5
+            timeoutSeconds: 2
+            failureThreshold: 24
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            periodSeconds: 10
+            timeoutSeconds: 2
+            failureThreshold: 3
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop: ["ALL"]
+          volumeMounts:
+            # gunicorn heartbeats through /tmp; with a read-only root
+            # filesystem it needs a real writable tmp.
+            - name: tmp
+              mountPath: /tmp
+      volumes:
+        - name: tmp
+          emptyDir:
+            sizeLimit: 64Mi
