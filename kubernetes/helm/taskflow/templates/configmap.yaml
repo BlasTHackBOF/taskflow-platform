@@ -1,0 +1,14 @@
+# Non-sensitive settings only; secrets stay in the vault-created Secret
+# the chart references but never creates (NOTES.txt).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ include "taskflow.fullname" . }}-config
+  labels:
+    {{- include "taskflow.labels" . | nindent 4 }}
+data:
+  # FLASK_ENV is deliberately absent: unset resolves to production.
+  GUNICORN_WORKERS: {{ .Values.app.gunicornWorkers | quote }}
+  LOG_FORMAT: {{ .Values.app.logFormat | quote }}
+  POSTGRES_DB: {{ .Values.postgres.database | quote }}
+  POSTGRES_USER: {{ .Values.postgres.user | quote }}

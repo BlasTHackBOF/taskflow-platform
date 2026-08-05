@@ -1,0 +1,5 @@
+# Production pins what must not float: the exact build. Everything else
+# is the values.yaml default, which IS the production posture — this
+# file exists to hold the pin and any future prod-only override.
+image:
+  tag: "6e7f8f880a51"

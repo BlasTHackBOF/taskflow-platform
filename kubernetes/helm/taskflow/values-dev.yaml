@@ -1,0 +1,21 @@
+# What a development cluster actually changes; everything else inherits
+# the production-shaped defaults.
+app:
+  gunicornWorkers: 1
+  logFormat: text # human-readable over machine-parseable on a laptop
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 250m
+      memory: 128Mi
+
+postgres:
+  storage:
+    size: 512Mi
+
+ingress:
+  # localtest.me resolves to 127.0.0.1 — a hostname for local ingress
+  # without touching /etc/hosts.
+  host: taskflow.localtest.me

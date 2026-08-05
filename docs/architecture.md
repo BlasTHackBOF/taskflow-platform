@@ -160,3 +160,4 @@ Decisions with lasting consequences are recorded individually in
 | [0007](decisions/0007-dynamic-inventory-and-role-split.md) | Ansible inventory resolved from Terraform + live AWS, four-role split |
 | [0008](decisions/0008-swap-on-the-k3s-node.md) | Swap on the k3s node — why, measured cost, removal criteria |
 | [0009](decisions/0009-namespace-storage-and-migration-job.md) | Dedicated namespace, local-path storage, migrations as a Job |
+| [0010](decisions/0010-helm-chart-structure-and-hooks.md) | Single self-contained chart, external secrets, post-install/pre-upgrade migration hook |
