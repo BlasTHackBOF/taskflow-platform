@@ -16,6 +16,14 @@ RUN python -m venv /opt/venv \
 # --- runtime --------------------------------------------------------------
 FROM python:3.12.12-slim-bookworm
 
+# The pinned base is rebuilt upstream on its own schedule; Debian
+# security fixes land faster than the tag does. This layer applies them
+# so the Trivy CRITICAL gate in CI judges our image, not upstream's
+# rebuild lag.
+RUN apt-get update \
+    && apt-get upgrade -y \
+    && rm -rf /var/lib/apt/lists/*
+
 # Build metadata surfaces in the taskflow_build_info metric.
 ARG APP_VERSION=dev
 ARG GIT_SHA=unknown

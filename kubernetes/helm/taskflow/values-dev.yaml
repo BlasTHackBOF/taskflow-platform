@@ -2,7 +2,7 @@
 # the production-shaped defaults.
 app:
   gunicornWorkers: 1
-  logFormat: text # human-readable over machine-parseable on a laptop
+  logFormat: console # human-readable over machine-parseable on a laptop
   resources:
     requests:
       cpu: 50m

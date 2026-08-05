@@ -20,6 +20,11 @@ class BaseConfig:
     DEBUG: bool = False
     TESTING: bool = False
     SQLALCHEMY_TRACK_MODIFICATIONS: bool = False
+    # Ping pooled connections at checkout and replace dead ones
+    # transparently. In Kubernetes the database pod is recreated as a
+    # matter of course, and without this every PostgreSQL restart costs
+    # one failed request per stale pooled connection.
+    SQLALCHEMY_ENGINE_OPTIONS: dict = {"pool_pre_ping": True}
 
     def __init__(self) -> None:
         self.SECRET_KEY: str = os.environ.get("SECRET_KEY", _DEFAULT_SECRET_KEY)
