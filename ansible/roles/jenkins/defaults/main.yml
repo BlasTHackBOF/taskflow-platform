@@ -1,6 +1,9 @@
 ---
-# Pinned: Jenkins plugins are compiled against a core version; a silently
-# moving `lts` tag is how a morning disappears. Bump deliberately.
-jenkins_image: "jenkins/jenkins:2.568.1-lts-jdk21"
+# The controller runs a locally built image: the pinned upstream LTS
+# (see docker/jenkins/Dockerfile) plus the pipeline's tools — docker
+# CLI, helm, kubectl, trivy — all pinned there too. The -toolsN suffix
+# is the rebuild trigger: bump it when the Dockerfile changes.
+jenkins_image: "taskflow-jenkins:2.568.1-tools1"
+jenkins_build_dir: /opt/taskflow/jenkins
 jenkins_volume: jenkins-home
 jenkins_http_port: 8080

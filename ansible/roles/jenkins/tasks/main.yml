@@ -4,6 +4,31 @@
     database: group
     key: docker
 
+- name: Create the image build directory
+  ansible.builtin.file:
+    path: "{{ jenkins_build_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Copy the Jenkins image Dockerfile
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../docker/jenkins/Dockerfile"
+    dest: "{{ jenkins_build_dir }}/Dockerfile"
+    owner: root
+    group: root
+    mode: "0644"
+  register: jenkins_dockerfile
+
+- name: Build the Jenkins controller image (tools baked in)
+  community.docker.docker_image:
+    name: "{{ jenkins_image }}"
+    source: build
+    build:
+      path: "{{ jenkins_build_dir }}"
+    force_source: "{{ jenkins_dockerfile.changed }}"
+
 - name: Create the Jenkins home volume
   community.docker.docker_volume:
     name: "{{ jenkins_volume }}"
